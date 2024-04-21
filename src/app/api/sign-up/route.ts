@@ -1,6 +1,6 @@
-import { sendVerificationEmail } from "@/app/helpers/sendVerificationEmail";
+import { sendVerificationEmail } from "@/helpers/sendVerificationEmail";
 import dbConnect from "@/lib/dbConnect";
-import UserModel from "@/model/User.model";
+import UserModel, { User } from "@/model/User.model";
 import bcrypt from "bcryptjs";
 
 export async function POST(request: Request) {
@@ -8,7 +8,7 @@ export async function POST(request: Request) {
 
     try {
         const {username, email, password} = await request.json();
-        const existingUserVerifiedByUsername = UserModel.findOne({
+        const existingUserVerifiedByUsername = await UserModel.findOne({
             username,
             isVerified: true
         })
@@ -21,7 +21,7 @@ export async function POST(request: Request) {
             })
         }
 
-        const existingUserByEmail = UserModel.findOne({email});
+        const existingUserByEmail = await UserModel.findOne({email});
         const verifyCode = Math.floor(100000 + Math.random() * 900000).toString();
         if(existingUserByEmail) {
             if(existingUserByEmail.isVerified) {
@@ -42,7 +42,7 @@ export async function POST(request: Request) {
         } else {
             const hashedPassword = await bcrypt.hash(password, 10);
             const expiryDate = new Date()
-            expiryDate.setHours(expiryDate.getHours + 1);
+            expiryDate.setHours(expiryDate.getHours() + 1);
             const newUser = new UserModel({
                 username: username,
                 email: email,
